@@ -9,7 +9,7 @@ import com.horizen.proposition.PublicKey25519Proposition;
 import com.horizen.proposition.PublicKey25519PropositionSerializer;
 import com.horizen.serialization.Views;
 import com.talentica.champy.bottle.box.BottleBox;
-import jdk.nashorn.internal.objects.annotations.Getter;
+
 import scala.Int;
 import scorex.crypto.hash.Blake2b256;
 
