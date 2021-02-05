@@ -66,8 +66,8 @@ public class BottleInfoDBService {
         Set<String> bottleIdsList = new HashSet<String>();
         for (Box<Proposition> currentBox : boxes) {
             if (BottleBox.class.isAssignableFrom(currentBox.getClass())) {
-                String vin = BottleBox.parseBytes(currentBox.bytes()).getId();
-                bottleIdsList.add(vin);
+                String uuid = BottleBox.parseBytes(currentBox.bytes()).getId();
+                bottleIdsList.add(uuid);
             }
             // else if (CarSellOrderBox.class.isAssignableFrom(currentBox.getClass())){
             //    String vin  = CarSellOrderBox.parseBytes(currentBox.bytes()).getVin();

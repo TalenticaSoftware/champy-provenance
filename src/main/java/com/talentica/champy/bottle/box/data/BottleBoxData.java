@@ -10,7 +10,6 @@ import com.horizen.proposition.PublicKey25519PropositionSerializer;
 import com.horizen.serialization.Views;
 import com.talentica.champy.bottle.box.BottleBox;
 
-import scala.Int;
 import scorex.crypto.hash.Blake2b256;
 
 import java.util.Arrays;
@@ -20,19 +19,19 @@ import static com.talentica.champy.bottle.box.data.AppBoxesDataIdsEnum.BottleBox
 @JsonView(Views.Default.class)
 public class BottleBoxData extends AbstractNoncedBoxData<PublicKey25519Proposition, BottleBox, BottleBoxData> {
     // attributes defined for Bottle:
-    private final String id;
+    private final String uuid;
     private final String manufacturer;
     private final int year;
 
-    public BottleBoxData(PublicKey25519Proposition proposition, String id, String manufacturer, int year) {
+    public BottleBoxData(PublicKey25519Proposition proposition, String uuid, String manufacturer, int year) {
         //Zen equivalent value is set to 1
         super(proposition, 1);
-        this.id = id;
+        this.uuid = uuid;
         this.manufacturer = manufacturer;
         this.year = year;
     }
 
-    public String getId(){return id;}
+    public String getId(){return uuid;}
 
     public String getManufacturer(){return manufacturer;}
 
@@ -47,7 +46,7 @@ public class BottleBoxData extends AbstractNoncedBoxData<PublicKey25519Propositi
     public byte[] customFieldsHash() {
         return Blake2b256.hash(
                 Bytes.concat(
-                        id.getBytes(),
+                        uuid.getBytes(),
                         manufacturer.getBytes(),
                         Ints.toByteArray(year)));
     }
@@ -56,8 +55,8 @@ public class BottleBoxData extends AbstractNoncedBoxData<PublicKey25519Propositi
     public byte[] bytes() {
         return Bytes.concat(
                 proposition().bytes(),
-                Ints.toByteArray(id.getBytes().length),
-                id.getBytes(),
+                Ints.toByteArray(uuid.getBytes().length),
+                uuid.getBytes(),
                 Ints.toByteArray(manufacturer.length()),
                 manufacturer.getBytes(),
                 Ints.toByteArray(year)
@@ -100,7 +99,7 @@ public class BottleBoxData extends AbstractNoncedBoxData<PublicKey25519Propositi
     @Override
     public String toString() {
         return "BottleBoxData{" +
-                "id=" + id +
+                "uuid=" + uuid +
                 ", proposition=" + proposition() +
                 ", manufacturer=" + manufacturer +
                 ", year=" + year +
