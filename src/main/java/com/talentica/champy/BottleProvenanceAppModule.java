@@ -32,6 +32,7 @@ import com.talentica.champy.bottle.api.BottleApi;
 import com.talentica.champy.bottle.box.AppBoxesIdEnum;
 import com.talentica.champy.bottle.box.BottleBoxSerializer;
 import com.talentica.champy.bottle.box.data.AppBoxesDataIdsEnum;
+import com.talentica.champy.bottle.box.data.BottleBoxDataSerializer;
 import com.talentica.champy.bottle.transaction.AppTransactionIdsEnum;
 import com.talentica.champy.bottle.transaction.CreateBottleTransactionSerializer;
 
@@ -62,7 +63,7 @@ public class BottleProvenanceAppModule
 
         // Specify how to serialize custom BoxData.
         HashMap<Byte, NoncedBoxDataSerializer<NoncedBoxData<Proposition, NoncedBox<Proposition>>>> customBoxDataSerializers = new HashMap<>();
-        customBoxDataSerializers.put(AppBoxesDataIdsEnum.BottleBoxDataId.id(), (NoncedBoxDataSerializer) BottleBoxSerializer.getSerializer());
+        customBoxDataSerializers.put(AppBoxesDataIdsEnum.BottleBoxDataId.id(), (NoncedBoxDataSerializer) BottleBoxDataSerializer.getSerializer());
 
         // Specify custom secrets
         HashMap<Byte, SecretSerializer<Secret>> customSecretSerializers = new HashMap<>();
@@ -146,7 +147,7 @@ public class BottleProvenanceAppModule
                 .annotatedWith(Names.named("ConsensusStorage"))
                 .toInstance(IODBStorageUtil.getStorage(consensusStore));
         bind(Storage.class)
-                .annotatedWith(Names.named("CarInfoStorage"))
+                .annotatedWith(Names.named("BottleInfoStorage"))
                 .toInstance(IODBStorageUtil.getStorage(bottleInfoStore));
 
         bind(new TypeLiteral<List<Pair<String, String>>> () {})
