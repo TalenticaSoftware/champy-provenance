@@ -42,7 +42,7 @@ public class BottleProvenanceAppState implements ApplicationState {
                 }
             }
         }
-        return false;
+        return true;
     }
 
     @Override
