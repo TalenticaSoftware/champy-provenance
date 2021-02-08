@@ -2,7 +2,7 @@ package com.talentica.champy.bottle.box;
 
 public enum AppBoxesIdEnum {
     BottleBoxId((byte)1),
-    ShipmentOrderId((byte)2);
+    ShipmentOrderBoxId((byte)2);
 
     private final byte id;
 
