@@ -49,17 +49,13 @@ public final class BottleBox extends AbstractNoncedBox<PublicKey25519Proposition
         return new BottleBox(boxData, nonce);
     }
 
-    public String getId() {return boxData.getId();}
+    public String getUuid() {return boxData.getUuid();}
 
     public String getManufacturer() {return boxData.getManufacturer();}
 
-    public int getYear() {return boxData.getYear();}
-
     public byte[] getBottleId() {
         return Bytes.concat(
-                getId().getBytes(),
-                getManufacturer().getBytes(),
-                Ints.toByteArray(getYear())
-        );
+                getUuid().getBytes(),
+                getManufacturer().getBytes());
     }
 }
