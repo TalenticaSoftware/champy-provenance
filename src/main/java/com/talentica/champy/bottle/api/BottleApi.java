@@ -171,15 +171,16 @@ public class BottleApi extends ApplicationApiGroup {
 
             // Collect all bottle boxes in node wallet to searchable hashmap
             // Key is box id in HexString format
-            HashMap<byte[], BottleBox> bottleBoxMap = getBottleBoxIdMap(view.getNodeWallet());
+            HashMap<String, BottleBox> bottleBoxMap = getBottleBoxIdMap(view.getNodeWallet());
 
-            ent.bottleBoxIds.forEach( (bottleBoxId) -> {
-                if ( bottleBoxMap.containsKey(BytesUtils.fromHexString(bottleBoxId))){
-                    bottleBoxesToOpen.add(bottleBoxMap.get(bottleBoxId));
-                }else {
-                    throw new IllegalArgumentException("BottleBox with given box id not found in the Wallet.");
+            for (String bottleBoxId : ent.bottleBoxIds) {
+                String lowerBottleBoxId = bottleBoxId.toLowerCase();
+                if (bottleBoxMap.containsKey(lowerBottleBoxId)) {
+                    bottleBoxesToOpen.add(bottleBoxMap.get(lowerBottleBoxId));
+                } else {
+                    throw new IllegalArgumentException("BottleBox with given box id " + lowerBottleBoxId + " not found in the Wallet.");
                 }
-            });
+            }
 
             // Parse the proposition of the Shipment Carrier.
             PublicKey25519Proposition shipmentCarrierProposition = PublicKey25519PropositionSerializer.getSerializer()
@@ -243,10 +244,10 @@ public class BottleApi extends ApplicationApiGroup {
             }
 
             ArrayList<Signature25519> bottleBoxProofs = new ArrayList<>(bottleBoxesToOpen.size());
-            bottleBoxesToOpen.forEach(bottleBox -> {
+            for( BottleBox bottleBox : bottleBoxesToOpen) {
                 bottleBoxProofs.add((Signature25519)view.getNodeWallet().
                         secretByPublicKey(bottleBox.proposition()).get().sign(messageToSign));
-            });
+            }
 
             ShipmentOrderInfo shipmentOrderInfo = new ShipmentOrderInfo( bottleBoxesToOpen, bottleBoxProofs,
                     shipmentCarrierProposition, ent.shipmentId, ent.manufacturer,
@@ -279,10 +280,10 @@ public class BottleApi extends ApplicationApiGroup {
         return boxesFromMempool;
     }
 
-    private HashMap<byte[], BottleBox> getBottleBoxIdMap(NodeWallet wallet){
-        HashMap<byte [], BottleBox> hashmap = new HashMap<>();
+    private HashMap<String, BottleBox> getBottleBoxIdMap(NodeWallet wallet){
+        HashMap<String, BottleBox> hashmap = new HashMap<>();
         for( Box b : wallet.boxesOfType(BottleBox.class)){
-            hashmap.put(b.id(), (BottleBox) b);
+            hashmap.put(ByteUtils.toHexString(b.id()).toLowerCase(), (BottleBox) b);
         }
         return hashmap;
     }
