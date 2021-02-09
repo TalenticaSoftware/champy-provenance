@@ -72,7 +72,7 @@ public class BottleProvenanceAppState implements ApplicationState {
         for (byte[] boxId : boxIdsToRemove) {
             stateReader.getClosedBox(boxId).ifPresent( box -> {
                         if (box instanceof BottleBox){
-                            String id = ((BottleBox)box).getId();
+                            String id = ((BottleBox)box).getUuid();
                             if (!bottleIdsToAdd.contains(id)){
                                 bottleIdsToRemove.add(id);
                             }
