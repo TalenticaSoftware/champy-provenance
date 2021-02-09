@@ -2,8 +2,8 @@ package com.talentica.champy.bottle.transaction;
 
 public enum AppTransactionIdsEnum {
     CreateBottleTransactionId((byte)1),
-    CreateShipmentTransactionId((byte)2),
-    DeliverShipmentTransactionId((byte)3),
+    CreateShipmentOrderTransactionId((byte)2),
+    DeliverShipmentOrderTransactionId((byte)3),
     SellBottleTransactionId((byte)4);
 
     private final byte id;
