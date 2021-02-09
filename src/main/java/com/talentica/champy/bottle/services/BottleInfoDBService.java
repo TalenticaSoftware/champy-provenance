@@ -13,6 +13,7 @@ import com.talentica.champy.bottle.box.BottleBox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scorex.crypto.hash.Blake2b256;
+import scorex.core.utils.ScorexEncoder;
 
 import java.util.*;
 
@@ -31,12 +32,12 @@ public class BottleInfoDBService {
         log.debug("bottle ids to remove " + bottleIdsToRemove);
         List<Pair<ByteArrayWrapper, ByteArrayWrapper>> toUpdate = new ArrayList<>(bottleIdsToAdd.size());
         List<ByteArrayWrapper> toRemove = new ArrayList<>(bottleIdsToRemove.size());
-        bottleIdsToAdd.forEach(ele -> {
-            toUpdate.add(buildDBElement(ele));
-        });
-        bottleIdsToRemove.forEach(ele -> {
-            toRemove.add(buildDBElement(ele).getKey());
-        });
+        for (String id : bottleIdsToAdd) {
+            toUpdate.add(buildDBElement(id));
+        }
+        for (String id : bottleIdsToRemove) {
+            toRemove.add(buildDBElement(id).getKey());
+        }
         bottleInfoStorage.update(new ByteArrayWrapper(version), toUpdate, toRemove);
         log.debug("bottleInfoStorage now contains: " + bottleInfoStorage.getAll().size() + " elements");
     }
@@ -63,10 +64,10 @@ public class BottleInfoDBService {
     }
 
     public Set<String> extractBottleIdsFromBoxes(List<Box<Proposition>> boxes){
-        Set<String> bottleIdsList = new HashSet<String>();
+        Set<String> bottleIdsList = new HashSet<>();
         for (Box<Proposition> currentBox : boxes) {
             if (BottleBox.class.isAssignableFrom(currentBox.getClass())) {
-                String uuid = BottleBox.parseBytes(currentBox.bytes()).getId();
+                String uuid = BottleBox.parseBytes(currentBox.bytes()).getUuid();
                 bottleIdsList.add(uuid);
             }
             // else if (CarSellOrderBox.class.isAssignableFrom(currentBox.getClass())){
