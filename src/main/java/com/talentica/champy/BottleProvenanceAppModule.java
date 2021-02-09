@@ -37,6 +37,7 @@ import com.talentica.champy.bottle.box.data.BottleBoxDataSerializer;
 import com.talentica.champy.bottle.box.data.ShipmentOrderBoxDataSerializer;
 import com.talentica.champy.bottle.transaction.AppTransactionIdsEnum;
 import com.talentica.champy.bottle.transaction.CreateBottleTransactionSerializer;
+import com.talentica.champy.bottle.transaction.CreateShipmentOrderTransactionSerializer;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -78,6 +79,7 @@ public class BottleProvenanceAppModule
         // Specify how to serialize custom Transaction.
         HashMap<Byte, TransactionSerializer<BoxTransaction<Proposition, Box<Proposition>>>> customTransactionSerializers = new HashMap<>();
         customTransactionSerializers.put(AppTransactionIdsEnum.CreateBottleTransactionId.id(), (TransactionSerializer) CreateBottleTransactionSerializer.getSerializer());
+        customTransactionSerializers.put(AppTransactionIdsEnum.CreateShipmentOrderTransactionId.id(), (TransactionSerializer) CreateShipmentOrderTransactionSerializer.getSerializer());
 
         // Create companions that will allow to serialize and deserialize any kind of core and custom types specified.
         SidechainBoxesDataCompanion sidechainBoxesDataCompanion = new SidechainBoxesDataCompanion(customBoxDataSerializers);
