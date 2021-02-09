@@ -31,8 +31,10 @@ import com.horizen.wallet.ApplicationWallet;
 import com.talentica.champy.bottle.api.BottleApi;
 import com.talentica.champy.bottle.box.AppBoxesIdEnum;
 import com.talentica.champy.bottle.box.BottleBoxSerializer;
+import com.talentica.champy.bottle.box.ShipmentOrderBoxSerializer;
 import com.talentica.champy.bottle.box.data.AppBoxesDataIdsEnum;
 import com.talentica.champy.bottle.box.data.BottleBoxDataSerializer;
+import com.talentica.champy.bottle.box.data.ShipmentOrderBoxDataSerializer;
 import com.talentica.champy.bottle.transaction.AppTransactionIdsEnum;
 import com.talentica.champy.bottle.transaction.CreateBottleTransactionSerializer;
 
@@ -60,10 +62,12 @@ public class BottleProvenanceAppModule
         // The hash map expect to have unique Box type ids as the keys.
         HashMap<Byte, BoxSerializer<Box<Proposition>>> customBoxSerializers = new HashMap<>();
         customBoxSerializers.put(AppBoxesIdEnum.BottleBoxId.id(), (BoxSerializer) BottleBoxSerializer.getSerializer());
+        customBoxSerializers.put(AppBoxesIdEnum.ShipmentOrderBoxId.id(), (BoxSerializer) ShipmentOrderBoxSerializer.getSerializer());
 
         // Specify how to serialize custom BoxData.
         HashMap<Byte, NoncedBoxDataSerializer<NoncedBoxData<Proposition, NoncedBox<Proposition>>>> customBoxDataSerializers = new HashMap<>();
         customBoxDataSerializers.put(AppBoxesDataIdsEnum.BottleBoxDataId.id(), (NoncedBoxDataSerializer) BottleBoxDataSerializer.getSerializer());
+        customBoxDataSerializers.put(AppBoxesDataIdsEnum.ShipmentOrderBoxDataId.id(), (NoncedBoxDataSerializer) ShipmentOrderBoxDataSerializer.getSerializer());
 
         // Specify custom secrets
         HashMap<Byte, SecretSerializer<Secret>> customSecretSerializers = new HashMap<>();
