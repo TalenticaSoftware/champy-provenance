@@ -52,7 +52,8 @@ public class BottleBoxData extends AbstractNoncedBoxData<PublicKey25519Propositi
                 proposition().bytes(),
                 Ints.toByteArray(uuid.getBytes().length),
                 uuid.getBytes(),
-                Ints.toByteArray(manufacturer.length())
+                Ints.toByteArray(manufacturer.length()),
+                manufacturer.getBytes()
         );
     }
 
