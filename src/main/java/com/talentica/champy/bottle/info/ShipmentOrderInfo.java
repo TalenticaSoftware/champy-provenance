@@ -52,36 +52,36 @@ public class ShipmentOrderInfo {
         this.shipmentValue = shipmentValue;
     }
 
-    public ShipmentOrderBoxData getSellOrderBoxData() {
+    public ShipmentOrderBoxData getShipmentOrderBoxData() {
         ArrayList<String> bottleBoxUuids = new ArrayList<>(bottleBoxesToOpen.size());
-        bottleBoxesToOpen.forEach(bottleBox -> {
+        for(BottleBox bottleBox : bottleBoxesToOpen){
             bottleBoxUuids.add(bottleBox.getUuid());
-        });
+        }
         return new ShipmentOrderBoxData(carrierProposition, shipmentId, manufacturer,
                 receiver, carrier, shippingDate, bottleBoxUuids, shipmentValue);
     }
 
-    // ShipmentOrderIfo minimal bytes representation.
+    // ShipmentOrderInfo minimal bytes representation.
     public byte[] bytes() {
         byte[] bottleBoxesToOpenBytes = new byte[]{};
-        bottleBoxesToOpen.forEach(bottleBox -> {
+        for (BottleBox bottleBox : bottleBoxesToOpen) {
             byte[] boxToOpenBytes = BottleBoxSerializer.getSerializer().toBytes(bottleBox);
-            Bytes.concat(bottleBoxesToOpenBytes, Ints.toByteArray(boxToOpenBytes.length),
+            bottleBoxesToOpenBytes = Bytes.concat(bottleBoxesToOpenBytes, Ints.toByteArray(boxToOpenBytes.length),
                     boxToOpenBytes);
-        });
+        }
 
         byte[] proofsBytes = new byte[]{};
-        proofs.forEach(proof -> {
+        for(Signature25519 proof: proofs){
             byte[] proofBytes = Signature25519Serializer.getSerializer().toBytes(proof);
-            Bytes.concat(proofsBytes, Ints.toByteArray(proofBytes.length), proofBytes);
-        });
+            proofsBytes = Bytes.concat(proofsBytes, Ints.toByteArray(proofBytes.length), proofBytes);
+        }
 
         byte[] propositionBytes = PublicKey25519PropositionSerializer.getSerializer().toBytes(carrierProposition);
 
         return Bytes.concat(
-                Ints.toByteArray(bottleBoxesToOpenBytes.length),
+                Ints.toByteArray(bottleBoxesToOpen.size()),
                 bottleBoxesToOpenBytes,
-                Ints.toByteArray(proofsBytes.length),
+                Ints.toByteArray(proofs.size()),
                 proofsBytes,
                 Ints.toByteArray(propositionBytes.length),
                 propositionBytes,
@@ -140,6 +140,7 @@ public class ShipmentOrderInfo {
 
         PublicKey25519Proposition carrierProposition = PublicKey25519PropositionSerializer.getSerializer()
                 .parseBytes(Arrays.copyOfRange(bytes, offset, offset + batchSize));
+        offset += batchSize;
 
         batchSize = BytesUtils.getInt(bytes, offset);
         offset += 4;
