@@ -22,21 +22,21 @@ import static com.talentica.champy.bottle.box.data.AppBoxesDataIdsEnum.ShipmentO
 public class ShipmentOrderBoxData extends AbstractNoncedBoxData<PublicKey25519Proposition, ShipmentOrderBox, ShipmentOrderBoxData> {
     // attributes defined for ShipmentOrder:
     private final String shipmentId;    //Unique shipment ID
-    private final String sender;        //sender public key
+    private final String manufacturer;        //manufacturer public key
     private final String receiver;      //Retailer - receiver public key
     private final String carrier;       //Carrier public key
     private final String shippingDate;    //Shipment date mm-dd-yyyy format
-    private final ArrayList<String> bottleIds;  //List of bottle Ids shipped within this shipment
+    private final ArrayList<String> bottleBoxUuids;  //List of bottle Ids shipped within this shipment
     private final long shipmentValue;           //Total shipment value
 
-    public ShipmentOrderBoxData(PublicKey25519Proposition proposition, String shipmentId, String sender, String receiver, String carrier, String shippingDate, ArrayList<String> bottleIds, long shipmentValue) {
+    public ShipmentOrderBoxData(PublicKey25519Proposition proposition, String shipmentId, String manufacturer, String receiver, String carrier, String shippingDate, ArrayList<String> bottleBoxUuids, long shipmentValue) {
         super(proposition, 1);
         this.shipmentId = shipmentId;
-        this.sender = sender;
+        this.manufacturer = manufacturer;
         this.receiver = receiver;
         this.carrier = carrier;
         this.shippingDate = shippingDate;
-        this.bottleIds = bottleIds;
+        this.bottleBoxUuids = bottleBoxUuids;
         this.shipmentValue = shipmentValue;
     }
 
@@ -50,33 +50,35 @@ public class ShipmentOrderBoxData extends AbstractNoncedBoxData<PublicKey25519Pr
         return Blake2b256.hash(
                 Bytes.concat(
                         shipmentId.getBytes(),
-                        sender.getBytes(),
+                        manufacturer.getBytes(),
                         receiver.getBytes()));
     }
 
     @Override
     public byte[] bytes() {
-        byte [] bottleIdsBytes = new byte[] {};
+        byte [] bottleUuidsBytes = new byte[] {};
 
         //Collect Bytes from all the bottle ids
-        bottleIds.forEach( (String bottleId) -> Bytes.concat(bottleIdsBytes,
-                Ints.toByteArray(bottleId.length()),
-                bottleId.getBytes()));
+        for (String bottleUuid : bottleBoxUuids) {
+            Bytes.concat(bottleUuidsBytes,
+                    Ints.toByteArray(bottleUuid.length()),
+                    bottleUuid.getBytes());
+        }
 
         return Bytes.concat(
                 proposition().bytes(),
                 Ints.toByteArray(shipmentId.length()),
                 shipmentId.getBytes(),
-                Ints.toByteArray(sender.length()),
-                sender.getBytes(),
+                Ints.toByteArray(manufacturer.length()),
+                manufacturer.getBytes(),
                 Ints.toByteArray(receiver.length()),
                 receiver.getBytes(),
                 Ints.toByteArray(carrier.length()),
                 carrier.getBytes(),
                 Ints.toByteArray(shippingDate.length()),
                 shippingDate.getBytes(),
-                Ints.toByteArray(bottleIds.size()),
-                bottleIdsBytes,
+                Ints.toByteArray(bottleBoxUuids.size()),
+                bottleUuidsBytes,
                 Longs.toByteArray(shipmentValue)
         );
     }
@@ -96,7 +98,7 @@ public class ShipmentOrderBoxData extends AbstractNoncedBoxData<PublicKey25519Pr
         size = Ints.fromByteArray(Arrays.copyOfRange(bytes, offset, offset+Ints.BYTES));
         offset += Ints.BYTES;
 
-        String sender = new String(Arrays.copyOfRange(bytes, offset, offset+size));
+        String manufacturer = new String(Arrays.copyOfRange(bytes, offset, offset+size));
         offset += size;
 
         size = Ints.fromByteArray(Arrays.copyOfRange(bytes, offset, offset+Ints.BYTES));
@@ -117,24 +119,24 @@ public class ShipmentOrderBoxData extends AbstractNoncedBoxData<PublicKey25519Pr
         String shipmentDate = new String(Arrays.copyOfRange(bytes, offset, offset+size));
         offset += size;
 
-        //Number of bottleIds
+        //Number of bottleBoxIds
         size = Ints.fromByteArray(Arrays.copyOfRange(bytes, offset, offset+Ints.BYTES));
         offset += Ints.BYTES;
 
-        ArrayList<String> bottleIds = new ArrayList<>(size);
+        ArrayList<String> bottleBoxIds = new ArrayList<>(size);
         for(int i=0; i<size; ++i){
             size = Ints.fromByteArray(Arrays.copyOfRange(bytes, offset, offset+Ints.BYTES));
             offset += Ints.BYTES;
 
-            String bottleId = new String(Arrays.copyOfRange(bytes, offset, offset+size));
+            String bottleBoxId = new String(Arrays.copyOfRange(bytes, offset, offset+size));
             offset += size;
 
-            bottleIds.add(bottleId);
+            bottleBoxIds.add(bottleBoxId);
         }
 
         long shipmentValue = Longs.fromByteArray(Arrays.copyOfRange(bytes, offset, offset+Longs.BYTES));
 
-        return new ShipmentOrderBoxData(proposition, shipmentId, sender, receiver, carrier, shipmentDate, bottleIds, shipmentValue );
+        return new ShipmentOrderBoxData(proposition, shipmentId, manufacturer, receiver, carrier, shipmentDate, bottleBoxIds, shipmentValue );
     }
 
     @Override
@@ -151,8 +153,8 @@ public class ShipmentOrderBoxData extends AbstractNoncedBoxData<PublicKey25519Pr
         return shipmentId;
     }
 
-    public String getSender() {
-        return sender;
+    public String getManufacturer() {
+        return manufacturer;
     }
 
     public String getReceiver() {
@@ -167,8 +169,8 @@ public class ShipmentOrderBoxData extends AbstractNoncedBoxData<PublicKey25519Pr
         return shippingDate;
     }
 
-    public ArrayList<String> getBottleIds() {
-        return bottleIds;
+    public ArrayList<String> getBottleBoxUuids() {
+        return bottleBoxUuids;
     }
 
     public long getShipmentValue() {
@@ -180,11 +182,11 @@ public class ShipmentOrderBoxData extends AbstractNoncedBoxData<PublicKey25519Pr
         return "ShipmentOrderBoxData{" +
                 "shipmentId=" + shipmentId +
                 ", proposition=" + proposition() +
-                ", sender=" + sender +
+                ", manufacturer=" + manufacturer +
                 ", receiver=" + receiver +
                 ", carrier=" + carrier +
                 ", shippingDate=" + shippingDate +
-                ", bottleIds=" + String.join(",", bottleIds) +
+                ", bottleBoxIds=" + String.join(",", bottleBoxUuids) +
                 ", shipmentValue=" + shipmentValue +
                 '}';
     }
