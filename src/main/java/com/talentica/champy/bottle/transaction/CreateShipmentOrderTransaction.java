@@ -14,8 +14,6 @@ import com.horizen.utils.BytesUtils;
 import com.talentica.champy.bottle.box.ShipmentOrderBox;
 import com.talentica.champy.bottle.info.ShipmentOrderInfo;
 import scorex.core.NodeViewModifier$;
-import scorex.core.serialization.BytesSerializable;
-import scorex.core.serialization.ScorexSerializer;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
@@ -80,7 +78,7 @@ public class CreateShipmentOrderTransaction extends AbstractRegularTransaction {
         if(newBoxes == null) {
             newBoxes = new ArrayList<>(super.newBoxes());
             long nonce = getNewBoxNonce(shipmentOrderInfo.getCarrierProposition(), newBoxes.size());
-            newBoxes.add((NoncedBox) new ShipmentOrderBox(shipmentOrderInfo.getSellOrderBoxData(), nonce));
+            newBoxes.add((NoncedBox) new ShipmentOrderBox(shipmentOrderInfo.getShipmentOrderBoxData(), nonce));
         }
         return Collections.unmodifiableList(newBoxes);
     }
