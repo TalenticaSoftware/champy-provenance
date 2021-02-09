@@ -21,21 +21,17 @@ public class BottleBoxData extends AbstractNoncedBoxData<PublicKey25519Propositi
     // attributes defined for Bottle:
     private final String uuid;
     private final String manufacturer;
-    private final int year;
 
-    public BottleBoxData(PublicKey25519Proposition proposition, String uuid, String manufacturer, int year) {
+    public BottleBoxData(PublicKey25519Proposition proposition, String uuid, String manufacturer) {
         //Zen equivalent value is set to 1
         super(proposition, 1);
         this.uuid = uuid;
         this.manufacturer = manufacturer;
-        this.year = year;
     }
 
-    public String getId(){return uuid;}
+    public String getUuid(){return uuid;}
 
     public String getManufacturer(){return manufacturer;}
-
-    public int getYear(){return year;}
 
     @Override
     public BottleBox getBox(long nonce) {
@@ -47,8 +43,7 @@ public class BottleBoxData extends AbstractNoncedBoxData<PublicKey25519Propositi
         return Blake2b256.hash(
                 Bytes.concat(
                         uuid.getBytes(),
-                        manufacturer.getBytes(),
-                        Ints.toByteArray(year)));
+                        manufacturer.getBytes()));
     }
 
     @Override
@@ -57,9 +52,7 @@ public class BottleBoxData extends AbstractNoncedBoxData<PublicKey25519Propositi
                 proposition().bytes(),
                 Ints.toByteArray(uuid.getBytes().length),
                 uuid.getBytes(),
-                Ints.toByteArray(manufacturer.length()),
-                manufacturer.getBytes(),
-                Ints.toByteArray(year)
+                Ints.toByteArray(manufacturer.length())
         );
     }
 
@@ -79,11 +72,8 @@ public class BottleBoxData extends AbstractNoncedBoxData<PublicKey25519Propositi
         offset += Ints.BYTES;
 
         String manufacturer = new String(Arrays.copyOfRange(bytes, offset, offset+size));
-        offset += size;
 
-        int year = Ints.fromByteArray(Arrays.copyOfRange(bytes, offset, offset+Ints.BYTES));
-
-        return new BottleBoxData(proposition, id, manufacturer, year);
+        return new BottleBoxData(proposition, id, manufacturer);
     }
 
     @Override
@@ -102,7 +92,6 @@ public class BottleBoxData extends AbstractNoncedBoxData<PublicKey25519Propositi
                 "uuid=" + uuid +
                 ", proposition=" + proposition() +
                 ", manufacturer=" + manufacturer +
-                ", year=" + year +
                 '}';
     }
 }
