@@ -24,7 +24,7 @@ D: A transaction "CreateShipmentOrder" is used to generate digitalized represent
 
 The proposition associated with the box is the public key of  the carrier.
 
-When the box is created, sidechain verifies the unique ID for the shipment also the existance of all the bottles IDs. Every bottle inside the shipment should exist and not previously shipped. Sidechain application state for every bottle IDs is recorded as shipped with appropriate shipping order details.
+When the box is created, sidechain verifies the unique ID for the shipment also the existance of all the bottles IDs. Every bottle inside the shipment should exist and not previously shipped. This possibility of duplicate bottle shipping is prevented by closing/unlocking the BottleBoxes shipped within a shipment order. This will ensure a bottle is either present as a BottleBox or part of ShipmentOrderBox. Sidechain application state for every bottle IDs is recorded as shipped with appropriate shipping order details.
 
 ***Assumptions:*** 
 - The payment related part is done offline and not in the sidechain.
