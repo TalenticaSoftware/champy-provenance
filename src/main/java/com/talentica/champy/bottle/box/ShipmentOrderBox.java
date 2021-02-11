@@ -32,6 +32,18 @@ public final class ShipmentOrderBox extends AbstractNoncedBox<PublicKey25519Prop
 
     public String getShipmentId() {return boxData.getShipmentId();}
 
+    public String getManufacturer() {
+        return boxData.getManufacturer();
+    }
+
+    public String getReceiver() {
+        return boxData.getReceiver();
+    }
+
+    public String getCarrier() {
+        return boxData.getCarrier();
+    }
+
     public ArrayList<String> getBottleBoxUuids() {
         return boxData.getBottleBoxUuids();
     }
