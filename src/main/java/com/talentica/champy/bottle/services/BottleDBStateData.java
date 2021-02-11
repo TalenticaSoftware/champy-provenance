@@ -1,11 +1,14 @@
 package com.talentica.champy.bottle.services;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.primitives.Bytes;
 import com.google.common.primitives.Ints;
+import com.horizen.serialization.Views;
 
 import java.util.Arrays;
 
 // This state will be stored for every bottle
+@JsonView(Views.Default.class)
 public class BottleDBStateData {
 
     public BottleDBStateData(String uuid, BottleStateEnum state, String manufacturer, String carrier,
@@ -21,6 +24,10 @@ public class BottleDBStateData {
     public BottleDBStateData(String uuid) {
         this.uuid = uuid;
         this.state = BottleStateEnum.CREATED;
+        this.manufacturer = "";
+        this.carrier = "";
+        this.retailer = "";
+        this.createBottleTransactionId = "";
     }
 
     public String getUuid() {
