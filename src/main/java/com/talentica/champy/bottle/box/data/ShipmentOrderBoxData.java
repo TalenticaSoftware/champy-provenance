@@ -60,7 +60,7 @@ public class ShipmentOrderBoxData extends AbstractNoncedBoxData<PublicKey25519Pr
 
         //Collect Bytes from all the bottle ids
         for (String bottleUuid : bottleBoxUuids) {
-            Bytes.concat(bottleUuidsBytes,
+            bottleUuidsBytes = Bytes.concat(bottleUuidsBytes,
                     Ints.toByteArray(bottleUuid.length()),
                     bottleUuid.getBytes());
         }
@@ -120,11 +120,11 @@ public class ShipmentOrderBoxData extends AbstractNoncedBoxData<PublicKey25519Pr
         offset += size;
 
         //Number of bottleBoxIds
-        size = Ints.fromByteArray(Arrays.copyOfRange(bytes, offset, offset+Ints.BYTES));
+        final int nBottles = Ints.fromByteArray(Arrays.copyOfRange(bytes, offset, offset+Ints.BYTES));
         offset += Ints.BYTES;
 
         ArrayList<String> bottleBoxIds = new ArrayList<>(size);
-        for(int i=0; i<size; ++i){
+        for(int i=0; i<nBottles; ++i){
             size = Ints.fromByteArray(Arrays.copyOfRange(bytes, offset, offset+Ints.BYTES));
             offset += Ints.BYTES;
 
