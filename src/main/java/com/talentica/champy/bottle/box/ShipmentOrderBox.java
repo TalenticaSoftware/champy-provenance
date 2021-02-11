@@ -11,6 +11,7 @@ import com.horizen.serialization.Views;
 import com.talentica.champy.bottle.box.data.ShipmentOrderBoxData;
 import com.talentica.champy.bottle.box.data.ShipmentOrderBoxDataSerializer;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import static com.talentica.champy.bottle.box.AppBoxesIdEnum.ShipmentOrderBoxId;
@@ -30,6 +31,10 @@ public final class ShipmentOrderBox extends AbstractNoncedBox<PublicKey25519Prop
     }
 
     public String getShipmentId() {return boxData.getShipmentId();}
+
+    public ArrayList<String> getBottleBoxUuids() {
+        return boxData.getBottleBoxUuids();
+    }
 
     @Override
     public byte[] bytes() {
