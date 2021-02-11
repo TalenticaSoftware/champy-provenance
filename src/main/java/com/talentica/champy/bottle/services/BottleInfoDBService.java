@@ -14,32 +14,28 @@ import com.talentica.champy.bottle.box.ShipmentOrderBox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scorex.crypto.hash.Blake2b256;
-import scorex.core.utils.ScorexEncoder;
 
 import java.util.*;
 
 public class BottleInfoDBService {
     private Storage bottleInfoStorage;
-    private HashMap<String, BottleDBStateData> bottleInfoStateData;
+    private HashMap<String, BottleDBStateData> interimBottleInfoStateData;
     protected Logger log = LoggerFactory.getLogger(BottleInfoDBService.class.getName());
 
     @Inject
     public BottleInfoDBService(@Named("BottleInfoStorage") Storage bottleInfoStorage){
         this.bottleInfoStorage = bottleInfoStorage;
+        this.interimBottleInfoStateData = new HashMap<>();
     }
 
-    public void updateBottleStateData(byte[] version, Set<Pair<String,BottleDBStateData>> bottleInfoToAdd, Set<String> bottleIdsToRemove){
+    public void updateBottleStateData(byte[] version, Set<Pair<String,BottleDBStateData>> bottleInfoToAdd,
+                                      Set<String> bottleIdsToRemove){
         log.debug("BottleInfoDBService::updateBottleId");
         log.debug("bottle ids to add " + bottleInfoToAdd);
         log.debug("bottle ids to remove " + bottleIdsToRemove);
-        List<Pair<ByteArrayWrapper, ByteArrayWrapper>> toUpdate = new ArrayList<>(bottleInfoToAdd.size());
+        List<Pair<ByteArrayWrapper, ByteArrayWrapper>> toUpdate = new ArrayList<>();
         List<ByteArrayWrapper> toRemove = new ArrayList<>(bottleIdsToRemove.size());
         for (Pair<String,BottleDBStateData> pair : bottleInfoToAdd) {
-            if(bottleInfoStateData.containsKey(pair.getKey())){
-                pair.getValue().setCreateBottleTransactionId(bottleInfoStateData.get(pair.getKey()).
-                        getCreateBottleTransactionId());
-                bottleInfoStateData.remove(pair.getKey());
-            }
             toUpdate.add(buildDBElement(pair.getKey(), pair.getValue()));
         }
         for (String id : bottleIdsToRemove) {
@@ -50,15 +46,25 @@ public class BottleInfoDBService {
     }
 
     // Get current Bottle Info DB data for given list of bottles
-    public Set<Pair<String, BottleDBStateData>> getBottleDBStateData(Set<String> bottleIds){
-        Set<Pair<String, BottleDBStateData>> bottleInfoData = new HashSet<>();
+    public HashMap<String, BottleDBStateData> getBottleDBStateData(ArrayList<String> bottleIds){
+        HashMap<String, BottleDBStateData> bottleInfoData = new HashMap<>();
         for(String bottleId : bottleIds){
             ByteArrayWrapper stateDataBytes = bottleInfoStorage.getOrElse(buildDBElementKey(bottleId),
                     new ByteArrayWrapper(new BottleDBStateData(bottleId).bytes()));
             BottleDBStateData stateData = BottleDBStateData.parseBytes(stateDataBytes.data());
-            bottleInfoData.add(new Pair<>(bottleId, stateData));
+            bottleInfoData.put(bottleId, stateData);
         }
         return bottleInfoData;
+    }
+
+    // Method to get Bottle DB state given UUID
+    public BottleDBStateData getBottleDBStateData(String bottleUuid){
+        Optional<ByteArrayWrapper> stateDataBytes = bottleInfoStorage.get(buildDBElementKey(bottleUuid));
+        if(stateDataBytes.isPresent()){
+            return BottleDBStateData.parseBytes(stateDataBytes.get().data());
+        } else{
+            throw new IllegalArgumentException(String.format("Bottle UUID %s is invalid", bottleUuid));
+        }
     }
     // While creating a new bottleBox, validate if the bottleId is not already present in DB and mempool
     public boolean validateBottleId(String bottleId,  Optional<NodeMemoryPool> memoryPool) {
@@ -81,18 +87,40 @@ public class BottleInfoDBService {
         bottleInfoStorage.rollback(new ByteArrayWrapper(version));
     }
 
-    public Set<String> extractCreatedBottleIdsFromBoxes(List<Box<Proposition>> boxes) {
-        Set<String> bottleUuidsList = new HashSet<>();
+    public void updateBottleStatesFromBoxes(byte[] version, List<Box<Proposition>> boxes, Set<String> bottleIdsToRemove) {
+        Set<Pair<String, BottleDBStateData>> bottleInfoData = new HashSet<>();
         for (Box<Proposition> currentBox : boxes) {
             if (BottleBox.class.isAssignableFrom(currentBox.getClass())) {
-                String uuid = BottleBox.parseBytes(currentBox.bytes()).getUuid();
-                bottleUuidsList.add(uuid);
+                BottleBox bottleBox =  BottleBox.parseBytes(currentBox.bytes());
+                String uuid = bottleBox.getUuid();
+                BottleDBStateData bottleState = new BottleDBStateData(uuid);
+                bottleState.setManufacturer( bottleBox.getManufacturer());
+
+                // Update Create transaction ID
+                if(interimBottleInfoStateData.containsKey(uuid)){
+                    bottleState.setCreateBottleTransactionId(interimBottleInfoStateData.get(uuid).
+                            getCreateBottleTransactionId());
+                    interimBottleInfoStateData.remove(uuid);
+                }
+                bottleInfoData.add(new Pair<>(uuid, bottleState));
+            }
+            else if(ShipmentOrderBox.class.isAssignableFrom(currentBox.getClass())){
+                ShipmentOrderBox shipmentBox = ShipmentOrderBox.parseBytes(currentBox.bytes());
+                ArrayList<String> uuids = shipmentBox.getBottleBoxUuids();
+                HashMap<String, BottleDBStateData> bottleDBStateStored = getBottleDBStateData(uuids);
+                for (String uuid : uuids){
+                    BottleDBStateData stateData = bottleDBStateStored.getOrDefault(uuid, new BottleDBStateData(uuid));
+                    stateData.setCarrier(shipmentBox.getCarrier());
+                    stateData.setRetailer(shipmentBox.getReceiver());
+                    stateData.setState(BottleStateEnum.SHIPPED);
+                    bottleInfoData.add(new Pair<>(uuid, stateData));
+                }
             }
         }
-        return bottleUuidsList;
+        updateBottleStateData(version, bottleInfoData, bottleIdsToRemove);
     }
 
-    public Set<String> extractShippedBottleIdsFromBoxes(List<Box<Proposition>> boxes) {
+    public Set<String> extractShippedBottleStatesFromBoxes(List<Box<Proposition>> boxes) {
         Set<String> bottleUuidsList = new HashSet<>();
         for (Box<Proposition> currentBox : boxes) {
             if (ShipmentOrderBox.class.isAssignableFrom(currentBox.getClass())) {
@@ -105,13 +133,21 @@ public class BottleInfoDBService {
 
     public Set<String> extractBottleIdsFromBoxes(List<Box<Proposition>> boxes){
         Set<String> bottleUuidsList = new HashSet<>();
-        bottleUuidsList.addAll(extractCreatedBottleIdsFromBoxes(boxes));
-        bottleUuidsList.addAll(extractShippedBottleIdsFromBoxes(boxes));
+        for (Box<Proposition> currentBox : boxes) {
+            if (BottleBox.class.isAssignableFrom(currentBox.getClass())) {
+                String uuid = BottleBox.parseBytes(currentBox.bytes()).getUuid();
+                bottleUuidsList.add(uuid);
+            } else if (ShipmentOrderBox.class.isAssignableFrom(currentBox.getClass())) {
+                ShipmentOrderBox shipmentOrderBox = ShipmentOrderBox.parseBytes(currentBox.bytes());
+                ArrayList<String> uuids = shipmentOrderBox.getBottleBoxUuids();
+                bottleUuidsList.addAll(uuids);
+            }
+        }
         return bottleUuidsList;
     }
 
-    public HashMap<String, BottleDBStateData> getBottleInfoStateData() {
-        return bottleInfoStateData;
+    public HashMap<String, BottleDBStateData> getInterimBottleInfoStateData() {
+        return interimBottleInfoStateData;
     }
 
     private ByteArrayWrapper buildDBElementKey(String bottleId){
