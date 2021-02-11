@@ -2,6 +2,7 @@ package com.talentica.champy.bottle.api;
 
 import akka.http.javadsl.server.Route;
 import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.horizen.api.http.ApiResponse;
@@ -25,9 +26,11 @@ import com.horizen.utils.ByteArrayWrapper;
 import com.horizen.utils.BytesUtils;
 import com.talentica.champy.bottle.api.request.CreateBottleBoxRequest;
 import com.talentica.champy.bottle.api.request.CreateShipmentOrderBoxRequest;
+import com.talentica.champy.bottle.api.request.GetBottleStatus;
 import com.talentica.champy.bottle.box.BottleBox;
 import com.talentica.champy.bottle.box.data.BottleBoxData;
 import com.talentica.champy.bottle.info.ShipmentOrderInfo;
+import com.talentica.champy.bottle.services.BottleDBStateData;
 import com.talentica.champy.bottle.services.BottleInfoDBService;
 import com.talentica.champy.bottle.transaction.CreateBottleTransaction;
 import com.talentica.champy.bottle.transaction.CreateShipmentOrderTransaction;
@@ -59,8 +62,21 @@ public class BottleApi extends ApplicationApiGroup {
 
         routes.add(bindPostRequest("createBottle", this::createBottle, CreateBottleBoxRequest.class));
         routes.add(bindPostRequest("createShipmentOrder", this::createShipmentOrder, CreateShipmentOrderBoxRequest.class));
-
+        routes.add(bindPostRequest("getBottleStatus", this::getBottleStatus, GetBottleStatus.class));
         return routes;
+    }
+
+
+    private <T> ApiResponse getBottleStatus(SidechainNodeView view, GetBottleStatus ent){
+        try{
+            BottleDBStateData stateData = bottleInfoDBService.getBottleDBStateData(ent.uuid.toLowerCase());
+            ObjectMapper mapper = new ObjectMapper();
+            String jsonData = mapper.writeValueAsString(stateData);
+            return new TxResponse( jsonData);
+        }
+        catch (Exception e){
+            return new BottleResponseError("0106", "Error during getBottleData operation.", Some.apply(e));
+        }
     }
 
     /*
