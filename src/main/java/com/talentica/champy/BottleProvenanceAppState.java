@@ -8,16 +8,14 @@ import com.horizen.state.ApplicationState;
 import com.horizen.state.SidechainStateReader;
 import com.horizen.transaction.BoxTransaction;
 import com.talentica.champy.bottle.box.BottleBox;
+import com.talentica.champy.bottle.services.BottleDBStateData;
 import com.talentica.champy.bottle.services.BottleInfoDBService;
 import com.talentica.champy.bottle.transaction.CreateBottleTransaction;
 import scala.collection.JavaConverters;
 import scala.util.Success;
 import scala.util.Try;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 public class BottleProvenanceAppState implements ApplicationState {
     private BottleInfoDBService bottleInfoDBService;
@@ -42,6 +40,21 @@ public class BottleProvenanceAppState implements ApplicationState {
                 }
             }
         }
+        // DB State updates to be done when all validation checks are through.
+        // For CreateBottleTransaction update DBState with appropriate transactionId.
+        HashMap<String, BottleDBStateData> bottleInfoData = new HashMap<>();
+        for (BoxTransaction<Proposition, Box<Proposition>> t :  JavaConverters.seqAsJavaList(block.transactions())) {
+            if (CreateBottleTransaction.class.isInstance(t)) {
+                CreateBottleTransaction txn = CreateBottleTransaction.parseBytes( t.bytes());
+                String txnId = txn.id();
+                for (String currentBottleId : bottleInfoDBService.extractBottleIdsFromBoxes(t.newBoxes())) {
+                    //Collect DB State data to update
+                    BottleDBStateData stateData = new BottleDBStateData(currentBottleId);
+                    stateData.setCreateBottleTransactionId(txnId);
+                    bottleInfoDBService.getInterimBottleInfoStateData().put(currentBottleId, stateData);
+                }
+            }
+        }
         return true;
     }
 
@@ -63,10 +76,14 @@ public class BottleProvenanceAppState implements ApplicationState {
                                                 byte[] version,
                                                 List<Box<Proposition>> newBoxes,
                                                 List<byte[]> boxIdsToRemove) {
-        //we update the Bottle Ids database. The data from it will be used during validation.
+        // we update the Bottle Ids database. The data from it will be used during validation.
 
-        //collect the Ids to be added: the ones declared in new boxes
+        // Collect the Ids to be added: the ones declared in new boxes
+        // This include
+        // 1. BottleBox created newly
+        // 2. BottleBoxes collected from shipment order
         Set<String> bottleIdsToAdd = bottleInfoDBService.extractBottleIdsFromBoxes(newBoxes);
+
         //collect the Ids to be removed: the ones contained in the removed boxes
         Set<String> bottleIdsToRemove = new HashSet<>();
         for (byte[] boxId : boxIdsToRemove) {
@@ -77,16 +94,11 @@ public class BottleProvenanceAppState implements ApplicationState {
                                 bottleIdsToRemove.add(id);
                             }
                         }
-                        //else if (box instanceof CarSellOrderBox){
-                        //    String vin = ((CarSellOrderBox)box).getVin();
-                        //    if (!vinToAdd.contains(vin)){
-                        //        vinToRemove.add(vin);
-                        //    }
-                        //}
                     }
             );
         }
-        bottleInfoDBService.updateBottleId(version, bottleIdsToAdd, bottleIdsToRemove);
+
+        bottleInfoDBService.updateBottleStatesFromBoxes(version, newBoxes, bottleIdsToRemove);
         return new Success<>(this);
     }
 
