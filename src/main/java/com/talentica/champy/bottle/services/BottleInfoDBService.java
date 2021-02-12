@@ -87,24 +87,34 @@ public class BottleInfoDBService {
         bottleInfoStorage.rollback(new ByteArrayWrapper(version));
     }
 
-    public void updateBottleStatesFromBoxes(byte[] version, List<Box<Proposition>> boxes, Set<String> bottleIdsToRemove) {
+    public void updateBottleStatesFromBoxes(byte[] version, List<Box<Proposition>> newBoxes, Set<String> bottleIdsToRemove) {
         Set<Pair<String, BottleDBStateData>> bottleInfoData = new HashSet<>();
-        for (Box<Proposition> currentBox : boxes) {
+        for (Box<Proposition> currentBox : newBoxes) { //CreateBottle and DeliverShipment transaction case
             if (BottleBox.class.isAssignableFrom(currentBox.getClass())) {
                 BottleBox bottleBox =  BottleBox.parseBytes(currentBox.bytes());
                 String uuid = bottleBox.getUuid();
-                BottleDBStateData bottleState = new BottleDBStateData(uuid);
-                bottleState.setManufacturer( bottleBox.getManufacturer());
-
-                // Update Create transaction ID
-                if(interimBottleInfoStateData.containsKey(uuid)){
-                    bottleState.setCreateBottleTransactionId(interimBottleInfoStateData.get(uuid).
-                            getCreateBottleTransactionId());
-                    interimBottleInfoStateData.remove(uuid);
+                // Check if storage already has bottleinfo stored - this will happen for delivered shipment
+                Optional<ByteArrayWrapper> storedBottleStateBytesOptional = bottleInfoStorage.get(buildDBElementKey(uuid));
+                // Deliver shipment case where bottle state is already present
+                if( storedBottleStateBytesOptional.isPresent()) {
+                    BottleDBStateData bottleState = BottleDBStateData.parseBytes(storedBottleStateBytesOptional.get().data());
+                    if(bottleState.getState() == BottleStateEnum.SHIPPED) {
+                        bottleState.setState(BottleStateEnum.DELIVERED);
+                        bottleInfoData.add(new Pair<>(uuid, bottleState));
+                    }
+                }else{ // Newly created BottleBox
+                    BottleDBStateData bottleState = new BottleDBStateData(uuid);
+                    bottleState.setManufacturer(bottleBox.getManufacturer());
+                    // Update Create transaction ID
+                    if (interimBottleInfoStateData.containsKey(uuid)) {
+                        bottleState.setCreateBottleTransactionId(interimBottleInfoStateData.get(uuid).
+                                getCreateBottleTransactionId());
+                        interimBottleInfoStateData.remove(uuid);
+                    }
+                    bottleInfoData.add(new Pair<>(uuid, bottleState));
                 }
-                bottleInfoData.add(new Pair<>(uuid, bottleState));
             }
-            else if(ShipmentOrderBox.class.isAssignableFrom(currentBox.getClass())){
+            else if(ShipmentOrderBox.class.isAssignableFrom(currentBox.getClass())){ //Create Shipment Transaction case
                 ShipmentOrderBox shipmentBox = ShipmentOrderBox.parseBytes(currentBox.bytes());
                 List<String> uuids = shipmentBox.getBottleBoxUuids();
                 HashMap<String, BottleDBStateData> bottleDBStateStored = getBottleDBStateData(uuids);
@@ -114,6 +124,19 @@ public class BottleInfoDBService {
                     stateData.setRetailer(shipmentBox.getReceiver());
                     stateData.setState(BottleStateEnum.SHIPPED);
                     bottleInfoData.add(new Pair<>(uuid, stateData));
+                }
+            }
+        }
+
+        for(String uuid : bottleIdsToRemove){ //Handle SellBottle transaction
+            // Check if storage already has bottleinfo stored and state of bottleinfo
+            Optional<ByteArrayWrapper> storedBottleStateBytesOptional = bottleInfoStorage.get(buildDBElementKey(uuid));
+            if(storedBottleStateBytesOptional.isPresent()){
+                BottleDBStateData storedBottleState = BottleDBStateData.parseBytes(storedBottleStateBytesOptional.get().data());
+                if(storedBottleState.getState() == BottleStateEnum.DELIVERED){
+                    storedBottleState.setState(BottleStateEnum.SOLD);
+                    bottleIdsToRemove.remove(uuid);
+                    bottleInfoData.add(new Pair<>(uuid, storedBottleState));
                 }
             }
         }
