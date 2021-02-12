@@ -286,12 +286,14 @@ public class BottleApi extends ApplicationApiGroup {
     private <T> ApiResponse deliverShipmentOrder(SidechainNodeView view, DeliverShipmentRequest ent) {
         try {
             // Try to locate ShipmentOrderBox to be opened in the closed boxes list
-            ShipmentOrderBox shipmentOrderBox = (ShipmentOrderBox)view.getNodeState().getClosedBox(BytesUtils.
-                    fromHexString(ent.shipmentOrderId)).get();
+            Optional<Box> shipmentOrderBoxOptional = view.getNodeState().getClosedBox(BytesUtils.
+                    fromHexString(ent.shipmentOrderId));
 
-            if (shipmentOrderBox == null) {
+            if (!shipmentOrderBoxOptional.isPresent()) {
                 throw new IllegalArgumentException("ShipmentOrderBox with given box id not found in the Wallet.");
             }
+
+            ShipmentOrderBox shipmentOrderBox = (ShipmentOrderBox)shipmentOrderBoxOptional.get();
 
             // Parse the proposition of the retailer.
             PublicKey25519Proposition retailerProposition = PublicKey25519PropositionSerializer.getSerializer()
@@ -383,12 +385,14 @@ public class BottleApi extends ApplicationApiGroup {
     private <T> ApiResponse sellBottle(SidechainNodeView view, SellBottleRequest ent){
         try {
             // Try to locate BottleBox to be opened in the closed boxes list
-            BottleBox bottleBox = (BottleBox)view.getNodeState().getClosedBox(BytesUtils.
-                    fromHexString(ent.bottleBoxId)).get();
+            Optional<Box> bottleBoxOptional = view.getNodeState().getClosedBox(BytesUtils.
+                    fromHexString(ent.bottleBoxId));
 
-            if (bottleBox == null) {
+            if (!bottleBoxOptional.isPresent()) {
                 throw new IllegalArgumentException("BottleBox with given box id not found in the Wallet.");
             }
+
+            BottleBox bottleBox = (BottleBox)bottleBoxOptional.get();
 
             // No proposition is required. Consumer is the next owner of physical bottle.
 
