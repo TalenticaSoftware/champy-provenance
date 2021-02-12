@@ -24,16 +24,19 @@ import com.horizen.serialization.Views;
 import com.horizen.transaction.BoxTransaction;
 import com.horizen.utils.ByteArrayWrapper;
 import com.horizen.utils.BytesUtils;
-import com.talentica.champy.bottle.api.request.CreateBottleBoxRequest;
-import com.talentica.champy.bottle.api.request.CreateShipmentOrderBoxRequest;
-import com.talentica.champy.bottle.api.request.GetBottleStatus;
+import com.talentica.champy.bottle.api.request.*;
 import com.talentica.champy.bottle.box.BottleBox;
+import com.talentica.champy.bottle.box.ShipmentOrderBox;
 import com.talentica.champy.bottle.box.data.BottleBoxData;
+import com.talentica.champy.bottle.info.SellBottleInfo;
+import com.talentica.champy.bottle.info.ShipmentDeliveryInfo;
 import com.talentica.champy.bottle.info.ShipmentOrderInfo;
 import com.talentica.champy.bottle.services.BottleDBStateData;
 import com.talentica.champy.bottle.services.BottleInfoDBService;
 import com.talentica.champy.bottle.transaction.CreateBottleTransaction;
 import com.talentica.champy.bottle.transaction.CreateShipmentOrderTransaction;
+import com.talentica.champy.bottle.transaction.DeliverShipmentOrderTransaction;
+import com.talentica.champy.bottle.transaction.SellBottleTransaction;
 import org.bouncycastle.pqc.math.linearalgebra.ByteUtils;
 import scala.Option;
 import scala.Some;
@@ -62,12 +65,187 @@ public class BottleApi extends ApplicationApiGroup {
 
         routes.add(bindPostRequest("createBottle", this::createBottle, CreateBottleBoxRequest.class));
         routes.add(bindPostRequest("createShipmentOrder", this::createShipmentOrder, CreateShipmentOrderBoxRequest.class));
+        routes.add(bindPostRequest("deliverShipmentOrder", this::deliverShipmentOrder, DeliverShipmentRequest.class));
+        routes.add(bindPostRequest("SellBottle", this::sellBottle, SellBottleRequest.class));
         routes.add(bindPostRequest("getBottleStatus", this::getBottleStatus, GetBottleStatus.class));
         return routes;
     }
+    private <T> ApiResponse sellBottle(SidechainNodeView view, SellBottleRequest ent){
+        try {
+            // Try to locate BottleBox to be opened in the closed boxes list
+            BottleBox bottleBox = (BottleBox)view.getNodeState().getClosedBox(BytesUtils.
+                    fromHexString(ent.bottleBoxId)).get();
+
+            if (bottleBox == null) {
+                throw new IllegalArgumentException("BottleBox with given box id not found in the Wallet.");
+            }
+
+            // No proposition is required. Consumer is the next owner of physical bottle.
+
+            // Try to collect regular boxes to pay fee
+            List<Box<Proposition>> paymentBoxes = new ArrayList<>();
+            long amountToPay = ent.fee;
+            // Avoid to add boxes that are already spent in some Transaction that is present in node Mempool.
+            List<byte[]> boxIdsToExclude = boxesFromMempool(view.getNodeMemoryPool());
+            List<Box<Proposition>> regularBoxes = view.getNodeWallet().boxesOfType(RegularBox.class, boxIdsToExclude);
+            int index = 0;
+            while (amountToPay > 0 && index < regularBoxes.size()) {
+                paymentBoxes.add(regularBoxes.get(index));
+                amountToPay -= regularBoxes.get(index).value();
+                index++;
+            }
+
+            if (amountToPay > 0) {
+                throw new IllegalStateException("Not enough coins to pay the fee.");
+            }
+
+            // Set change if exists
+            long change = Math.abs(amountToPay);
+            List<RegularBoxData> regularOutputs = new ArrayList<>();
+            if (change > 0) {
+                regularOutputs.add(new RegularBoxData((PublicKey25519Proposition) paymentBoxes.get(0).proposition(), change));
+            }
+
+            List<byte[]> inputRegularBoxIds = new ArrayList<>();
+            for (Box b : paymentBoxes) {
+                inputRegularBoxIds.add(b.id());
+            }
+
+            // Create fake proofs to be able to create transaction to be signed.
+            SellBottleInfo fakeSellBottleInfo = new SellBottleInfo( bottleBox, null, ent.sellingPrice);
+            List<Signature25519> fakeRegularInputProofs = Collections.nCopies(inputRegularBoxIds.size(), null);
+
+            Long timestamp = System.currentTimeMillis();
+
+            SellBottleTransaction unsignedTransaction = new SellBottleTransaction(
+                    inputRegularBoxIds,
+                    fakeRegularInputProofs,
+                    regularOutputs,
+                    fakeSellBottleInfo,
+                    ent.fee,
+                    timestamp);
+
+            // Get the Tx message to be signed.
+            byte[] messageToSign = unsignedTransaction.messageToSign();
+
+            // Create signatures.
+            List<Signature25519> regularInputProofs = new ArrayList<>();
+
+            for (Box<Proposition> box : paymentBoxes) {
+                regularInputProofs.add((Signature25519) view.getNodeWallet().secretByPublicKey(box.proposition()).get().sign(messageToSign));
+            }
+
+            SellBottleInfo sellBottleInfo = new SellBottleInfo(
+                    bottleBox,
+                    (Signature25519)view.getNodeWallet().secretByPublicKey(bottleBox.proposition()).get().sign(messageToSign),
+                    ent.sellingPrice);
+
+            // Create the resulting signed transaction.
+            SellBottleTransaction transaction = new SellBottleTransaction(
+                    inputRegularBoxIds,
+                    regularInputProofs,
+                    regularOutputs,
+                    sellBottleInfo,
+                    ent.fee,
+                    timestamp);
+
+            return new TxResponse(ByteUtils.toHexString(sidechainTransactionsCompanion.toBytes((BoxTransaction) transaction)));
+        }
+        catch (Exception e){
+            return new BottleResponseError("0105", "Error during sell bottle operation.", Some.apply(e));
+        }
+    }
+
+    private <T> ApiResponse deliverShipmentOrder(SidechainNodeView view, DeliverShipmentRequest ent) {
+        try {
+            // Try to locate ShipmentOrderBox to be opened in the closed boxes list
+            ShipmentOrderBox shipmentOrderBox = (ShipmentOrderBox)view.getNodeState().getClosedBox(BytesUtils.
+                    fromHexString(ent.shipmentOrderId)).get();
+
+            if (shipmentOrderBox == null) {
+                throw new IllegalArgumentException("ShipmentOrderBox with given box id not found in the Wallet.");
+            }
+
+            // Parse the proposition of the retailer.
+            PublicKey25519Proposition retailerProposition = PublicKey25519PropositionSerializer.getSerializer()
+                    .parseBytes(BytesUtils.fromHexString(ent.retailerProposition));
+
+            // Try to collect regular boxes to pay fee
+            List<Box<Proposition>> paymentBoxes = new ArrayList<>();
+            long amountToPay = ent.fee;
+            // Avoid to add boxes that are already spent in some Transaction that is present in node Mempool.
+            List<byte[]> boxIdsToExclude = boxesFromMempool(view.getNodeMemoryPool());
+            List<Box<Proposition>> regularBoxes = view.getNodeWallet().boxesOfType(RegularBox.class, boxIdsToExclude);
+            int index = 0;
+            while (amountToPay > 0 && index < regularBoxes.size()) {
+                paymentBoxes.add(regularBoxes.get(index));
+                amountToPay -= regularBoxes.get(index).value();
+                index++;
+            }
+
+            if (amountToPay > 0) {
+                throw new IllegalStateException("Not enough coins to pay the fee.");
+            }
+
+            // Set change if exists
+            long change = Math.abs(amountToPay);
+            List<RegularBoxData> regularOutputs = new ArrayList<>();
+            if (change > 0) {
+                regularOutputs.add(new RegularBoxData((PublicKey25519Proposition) paymentBoxes.get(0).proposition(), change));
+            }
+
+            List<byte[]> inputRegularBoxIds = new ArrayList<>();
+            for (Box b : paymentBoxes) {
+                inputRegularBoxIds.add(b.id());
+            }
+
+            // Create fake proofs to be able to create transaction to be signed.
+            ShipmentDeliveryInfo fakeDeliveryInfo = new ShipmentDeliveryInfo( shipmentOrderBox, null, retailerProposition);
+            List<Signature25519> fakeRegularInputProofs = Collections.nCopies(inputRegularBoxIds.size(), null);
+
+            Long timestamp = System.currentTimeMillis();
+
+            DeliverShipmentOrderTransaction unsignedTransaction = new DeliverShipmentOrderTransaction(
+                    inputRegularBoxIds,
+                    fakeRegularInputProofs,
+                    regularOutputs,
+                    fakeDeliveryInfo,
+                    ent.fee,
+                    timestamp);
+
+            // Get the Tx message to be signed.
+            byte[] messageToSign = unsignedTransaction.messageToSign();
+
+            // Create signatures.
+            List<Signature25519> regularInputProofs = new ArrayList<>();
+
+            for (Box<Proposition> box : paymentBoxes) {
+                regularInputProofs.add((Signature25519) view.getNodeWallet().secretByPublicKey(box.proposition()).get().sign(messageToSign));
+            }
+
+            ShipmentDeliveryInfo shipmentDeliveryInfo = new ShipmentDeliveryInfo(
+                    shipmentOrderBox,
+                    (Signature25519)view.getNodeWallet().secretByPublicKey(shipmentOrderBox.proposition()).get().sign(messageToSign),
+                    retailerProposition);
 
 
-    private <T> ApiResponse getBottleStatus(SidechainNodeView view, GetBottleStatus ent){
+            // Create the resulting signed transaction.
+            DeliverShipmentOrderTransaction transaction = new DeliverShipmentOrderTransaction(
+                    inputRegularBoxIds,
+                    regularInputProofs,
+                    regularOutputs,
+                    shipmentDeliveryInfo,
+                    ent.fee,
+                    timestamp);
+
+            return new TxResponse(ByteUtils.toHexString(sidechainTransactionsCompanion.toBytes((BoxTransaction) transaction)));
+        }
+        catch (Exception e){
+            return new BottleResponseError("0104", "Error during deliver shipment operation.", Some.apply(e));
+        }
+    }
+
+            private <T> ApiResponse getBottleStatus(SidechainNodeView view, GetBottleStatus ent){
         try{
             BottleDBStateData stateData = bottleInfoDBService.getBottleDBStateData(ent.uuid.toLowerCase());
             ObjectMapper mapper = new ObjectMapper();
