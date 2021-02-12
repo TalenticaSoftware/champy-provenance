@@ -40,3 +40,16 @@ When ShipmentOrderBox box is successfully removed, sidechain application state f
 **R: As a retailer, I should be able to sell champagne bottle to a customer**
 
 D: A transaction "SellBottle" sells a bottle to end customer. This transaction spends a BottleBox.
+
+## Build and execute
+
+* Go to the project root folder.
+
+* Build and package application jar: mvn package.
+
+* Execute the application with the following command:
+
+For Linux:
+```
+java -cp ./target/champy-provenance-0.1.0.jar:./target/lib/* com.talentica.champy.BottleProvenanceApp ./src/main/resources/champy_sc_settings.conf
+```
