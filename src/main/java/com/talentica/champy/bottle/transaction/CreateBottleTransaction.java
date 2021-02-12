@@ -117,7 +117,6 @@ public class CreateBottleTransaction extends AbstractRegularTransaction {
         offset += 4;
 
         BottleBoxData outputBottleBoxData = BottleBoxDataSerializer.getSerializer().parseBytes(Arrays.copyOfRange(bytes, offset, offset + batchSize));
-        offset += batchSize;
 
         return new CreateBottleTransaction(inputRegularBoxIds, inputRegularBoxProofs, outputRegularBoxesData, outputBottleBoxData, fee, timestamp);
     }

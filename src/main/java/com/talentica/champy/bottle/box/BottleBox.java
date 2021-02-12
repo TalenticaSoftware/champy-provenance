@@ -3,7 +3,6 @@ package com.talentica.champy.bottle.box;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.primitives.Bytes;
-import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import com.horizen.box.AbstractNoncedBox;
 import com.horizen.box.BoxSerializer;

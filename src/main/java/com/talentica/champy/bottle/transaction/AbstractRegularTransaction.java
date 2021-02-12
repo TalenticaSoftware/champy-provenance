@@ -11,8 +11,6 @@ import com.horizen.proof.Signature25519Serializer;
 import com.horizen.proposition.Proposition;
 import com.horizen.transaction.SidechainTransaction;
 import com.horizen.utils.ListSerializer;
-import scorex.core.serialization.BytesSerializable;
-import scorex.core.serialization.ScorexSerializer;
 
 import java.util.ArrayList;
 import java.util.Collections;

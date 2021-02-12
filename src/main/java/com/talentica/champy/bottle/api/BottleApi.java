@@ -44,8 +44,7 @@ import scala.Some;
 import java.util.*;
 
 public class BottleApi extends ApplicationApiGroup {
-    private final SidechainTransactionsCompanion sidechainTransactionsCompanion
-            ;
+    private final SidechainTransactionsCompanion sidechainTransactionsCompanion;
     private BottleInfoDBService bottleInfoDBService;
 
     @Inject

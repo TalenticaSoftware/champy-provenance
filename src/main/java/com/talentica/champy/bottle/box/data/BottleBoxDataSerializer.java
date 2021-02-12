@@ -1,8 +1,6 @@
 package com.talentica.champy.bottle.box.data;
 
-import akka.util.ByteString;
 import com.horizen.box.data.NoncedBoxDataSerializer;
-import scala.util.Try;
 import scorex.util.serialization.Reader;
 import scorex.util.serialization.Writer;
 
