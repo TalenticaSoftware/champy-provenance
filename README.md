@@ -53,3 +53,76 @@ For Linux:
 ```
 java -cp ./target/champy-provenance-0.1.0.jar:./target/lib/* com.talentica.champy.BottleProvenanceApp ./src/main/resources/champy_sc_settings.conf
 ```
+
+## Using the application
+The application exposes the following API endpoints
+
+* To create a new bottle
+
+```
+curl --location --request POST '127.0.0.1:9085/bottleApi/createBottle' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "uuid": "b48a4467-e766-4856-9bc3-79d7667240e1",
+    "manufacturer": "champy",
+    "proposition": "a5b10622d70f094b7276e04608d97c7c699c8700164f78e16fe5e8082f4bb2ac",
+    "fee": 10
+}'
+```
+
+uuid is unique id for the bottle.
+
+* To create shipment order
+
+```
+curl --location --request POST '127.0.0.1:9085/bottleApi/createShipmentOrder' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+  "shipmentId": "e7054d86-1df6-4a43-a2b2-9e2be2c0a1e1",
+  "manufacturer": "champy",
+  "receiver": "walmart",
+  "carrier": "fedex",
+  "shippingDate": "01-21-2021",
+  "bottleBoxIds": ["05e445e3970e03e25ce3982d0cc70f9c42acfab806245bf8d77c2739d87d97f3","27e5eee4f2cb637cea10820882afc16d69428002c8753a924462568c3393b22c"],
+  "shipmentValue": 1000,
+  "carrierProposition": "a5b10622d70f094b7276e04608d97c7c699c8700164f78e16fe5e8082f4bb2ac",
+  "fee": 10
+}'
+```
+bottleBoxIds are the BottleBox ids that are created using the CreateBottle request
+
+* To deliver shipment order
+
+```
+curl --location --request POST '127.0.0.1:9085/bottleApi/deliverShipmentOrder' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+  "shipmentOrderId": "6683dd6cb02fc56bdfa8e80da3e9652542c49a254d7f23db8b8fbbce5748a5c2",
+  "retailerProposition": "a5b10622d70f094b7276e04608d97c7c699c8700164f78e16fe5e8082f4bb2ac",
+  "fee": 10
+}'
+```
+
+shipmentOrderId is ShipmentOrderBox id created in the above steps
+
+* To sell a bottle
+
+```
+curl --location --request POST '127.0.0.1:9085/bottleApi/SellBottle' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+  "bottleBoxId": "27e5eee4f2cb637cea10820882afc16d69428002c8753a924462568c3393b22c",
+  "sellingPrice": 1000,
+  "fee": 10
+}'
+```
+
+* To query bottle status
+
+```
+curl --location --request POST '127.0.0.1:9085/bottleApi/getBottleStatus' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+  "uuid": "87bc7c8d-e4c9-4c8b-a766-6c34112821a8"
+}'
+```
