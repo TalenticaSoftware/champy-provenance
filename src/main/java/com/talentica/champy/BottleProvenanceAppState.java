@@ -42,7 +42,6 @@ public class BottleProvenanceAppState implements ApplicationState {
         }
         // DB State updates to be done when all validation checks are through.
         // For CreateBottleTransaction update DBState with appropriate transactionId.
-        HashMap<String, BottleDBStateData> bottleInfoData = new HashMap<>();
         for (BoxTransaction<Proposition, Box<Proposition>> t :  JavaConverters.seqAsJavaList(block.transactions())) {
             if (CreateBottleTransaction.class.isInstance(t)) {
                 CreateBottleTransaction txn = CreateBottleTransaction.parseBytes( t.bytes());

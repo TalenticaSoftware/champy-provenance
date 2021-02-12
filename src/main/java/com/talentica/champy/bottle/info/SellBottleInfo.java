@@ -5,13 +5,9 @@ import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import com.horizen.proof.Signature25519;
 import com.horizen.proof.Signature25519Serializer;
-import com.horizen.proposition.PublicKey25519Proposition;
-import com.horizen.proposition.PublicKey25519PropositionSerializer;
 import com.horizen.utils.BytesUtils;
 import com.talentica.champy.bottle.box.BottleBox;
 import com.talentica.champy.bottle.box.BottleBoxSerializer;
-import com.talentica.champy.bottle.box.ShipmentOrderBox;
-import com.talentica.champy.bottle.box.ShipmentOrderBoxSerializer;
 
 import java.util.Arrays;
 
