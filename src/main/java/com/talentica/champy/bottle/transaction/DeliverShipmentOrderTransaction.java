@@ -71,7 +71,7 @@ public class DeliverShipmentOrderTransaction extends AbstractRegularTransaction 
             newBoxes = new ArrayList<>(super.newBoxes());
 
             // Set BottleBox with retailer as owner.
-            ArrayList<BottleBoxData> newBottleBoxesData = shipmentDeliveryInfo.getDeliveredBottleBoxesData();
+            List<BottleBoxData> newBottleBoxesData = shipmentDeliveryInfo.getDeliveredBottleBoxesData();
             for(BottleBoxData boxData : newBottleBoxesData){
                 long nonce = getNewBoxNonce(boxData.proposition(), newBoxes.size());
                 newBoxes.add((NoncedBox) new BottleBox(boxData, nonce));
@@ -132,7 +132,7 @@ public class DeliverShipmentOrderTransaction extends AbstractRegularTransaction 
         int batchSize = BytesUtils.getInt(bytes, offset);
         offset += 4;
 
-        ArrayList<byte[]> inputRegularBoxIds = new ArrayList<>();
+        List<byte[]> inputRegularBoxIds = new ArrayList<>();
         int idLength = NodeViewModifier$.MODULE$.ModifierIdSize();
         while(batchSize > 0) {
             inputRegularBoxIds.add(Arrays.copyOfRange(bytes, offset, offset + idLength));

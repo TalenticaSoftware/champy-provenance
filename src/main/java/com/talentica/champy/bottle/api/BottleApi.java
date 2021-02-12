@@ -175,7 +175,7 @@ public class BottleApi extends ApplicationApiGroup {
     private <T> ApiResponse createShipmentOrder(SidechainNodeView view, CreateShipmentOrderBoxRequest ent) {
         try{
             // Gather all BottleBoxes to be opened and create shipment order
-            ArrayList<BottleBox> bottleBoxesToOpen = new ArrayList<>();
+            List<BottleBox> bottleBoxesToOpen = new ArrayList<>();
 
             // Collect all bottle boxes in node wallet to searchable hashmap
             // Key is box id in HexString format
@@ -251,7 +251,7 @@ public class BottleApi extends ApplicationApiGroup {
                         secretByPublicKey(box.proposition()).get().sign(messageToSign));
             }
 
-            ArrayList<Signature25519> bottleBoxProofs = new ArrayList<>(bottleBoxesToOpen.size());
+            List<Signature25519> bottleBoxProofs = new ArrayList<>(bottleBoxesToOpen.size());
             for( BottleBox bottleBox : bottleBoxesToOpen) {
                 bottleBoxProofs.add((Signature25519)view.getNodeWallet().
                         secretByPublicKey(bottleBox.proposition()).get().sign(messageToSign));

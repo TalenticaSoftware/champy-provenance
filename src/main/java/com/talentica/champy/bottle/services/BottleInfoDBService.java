@@ -46,7 +46,7 @@ public class BottleInfoDBService {
     }
 
     // Get current Bottle Info DB data for given list of bottles
-    public HashMap<String, BottleDBStateData> getBottleDBStateData(ArrayList<String> bottleIds){
+    public HashMap<String, BottleDBStateData> getBottleDBStateData(List<String> bottleIds){
         HashMap<String, BottleDBStateData> bottleInfoData = new HashMap<>();
         for(String bottleId : bottleIds){
             ByteArrayWrapper stateDataBytes = bottleInfoStorage.getOrElse(buildDBElementKey(bottleId),
@@ -106,7 +106,7 @@ public class BottleInfoDBService {
             }
             else if(ShipmentOrderBox.class.isAssignableFrom(currentBox.getClass())){
                 ShipmentOrderBox shipmentBox = ShipmentOrderBox.parseBytes(currentBox.bytes());
-                ArrayList<String> uuids = shipmentBox.getBottleBoxUuids();
+                List<String> uuids = shipmentBox.getBottleBoxUuids();
                 HashMap<String, BottleDBStateData> bottleDBStateStored = getBottleDBStateData(uuids);
                 for (String uuid : uuids){
                     BottleDBStateData stateData = bottleDBStateStored.getOrDefault(uuid, new BottleDBStateData(uuid));
@@ -139,7 +139,7 @@ public class BottleInfoDBService {
                 bottleUuidsList.add(uuid);
             } else if (ShipmentOrderBox.class.isAssignableFrom(currentBox.getClass())) {
                 ShipmentOrderBox shipmentOrderBox = ShipmentOrderBox.parseBytes(currentBox.bytes());
-                ArrayList<String> uuids = shipmentOrderBox.getBottleBoxUuids();
+                List<String> uuids = shipmentOrderBox.getBottleBoxUuids();
                 bottleUuidsList.addAll(uuids);
             }
         }

@@ -13,6 +13,7 @@ import com.talentica.champy.bottle.box.data.ShipmentOrderBoxDataSerializer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import static com.talentica.champy.bottle.box.AppBoxesIdEnum.ShipmentOrderBoxId;
 
@@ -44,7 +45,7 @@ public final class ShipmentOrderBox extends AbstractNoncedBox<PublicKey25519Prop
         return boxData.getCarrier();
     }
 
-    public ArrayList<String> getBottleBoxUuids() {
+    public List<String> getBottleBoxUuids() {
         return boxData.getBottleBoxUuids();
     }
 

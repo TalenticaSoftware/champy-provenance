@@ -40,11 +40,11 @@ public class ShipmentDeliveryInfo {
         return retailerProposition;
     }
 
-    public ArrayList<BottleBoxData> getDeliveredBottleBoxesData(){
-        ArrayList<String> uuids = shipmentOrderBoxToOpen.getBottleBoxUuids();
+    public List<BottleBoxData> getDeliveredBottleBoxesData(){
+        List<String> uuids = shipmentOrderBoxToOpen.getBottleBoxUuids();
         List<PublicKey25519Proposition> propositions = Collections.nCopies(uuids.size(), retailerProposition);
         String manufacturer = shipmentOrderBoxToOpen.getManufacturer();
-        ArrayList<BottleBoxData> newBottleBoxesData = new ArrayList<>(uuids.size());
+        List<BottleBoxData> newBottleBoxesData = new ArrayList<>(uuids.size());
         int idx = 0;
         for(String bottleUuid : uuids){
             BottleBoxData boxData = new BottleBoxData(propositions.get(idx++), bottleUuid, manufacturer);

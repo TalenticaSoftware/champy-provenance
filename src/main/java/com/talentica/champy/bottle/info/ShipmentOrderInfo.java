@@ -14,14 +14,15 @@ import com.talentica.champy.bottle.box.data.ShipmentOrderBoxData;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 // CreateShipmentOrderInfo contains data required to construct CreateShipmentOrderTransaction specific inputs and outputs
 public class ShipmentOrderInfo {
-    public ArrayList<BottleBox> getBottleBoxesToOpen() {
+    public List<BottleBox> getBottleBoxesToOpen() {
         return bottleBoxesToOpen;
     }
 
-    public ArrayList<Signature25519> getProofs() {
+    public List<Signature25519> getProofs() {
         return proofs;
     }
 
@@ -29,8 +30,8 @@ public class ShipmentOrderInfo {
         return carrierProposition;
     }
 
-    private final ArrayList<BottleBox> bottleBoxesToOpen;       // List of BottleBoxes to be shipped
-    private final ArrayList<Signature25519> proofs;             // Proofs to unlock the boxes above
+    private final List<BottleBox> bottleBoxesToOpen;       // List of BottleBoxes to be shipped
+    private final List<Signature25519> proofs;             // Proofs to unlock the boxes above
     private final PublicKey25519Proposition carrierProposition; // Shipment carrier - who's going to own the shipment till delivered.
 
     private final String shipmentId;                    //Unique shipment ID
@@ -40,7 +41,7 @@ public class ShipmentOrderInfo {
     private final String shippingDate;                  //Shipment date mm-dd-yyyy format
     private final long shipmentValue;                   //Total shipment value
 
-    public ShipmentOrderInfo(ArrayList<BottleBox> bottleBoxesToOpen, ArrayList<Signature25519> proofs, PublicKey25519Proposition carrierProposition, String shipmentId, String manufacturer, String receiver, String carrier, String shippingDate, long shipmentValue) {
+    public ShipmentOrderInfo(List<BottleBox> bottleBoxesToOpen, List<Signature25519> proofs, PublicKey25519Proposition carrierProposition, String shipmentId, String manufacturer, String receiver, String carrier, String shippingDate, long shipmentValue) {
         this.bottleBoxesToOpen = bottleBoxesToOpen;
         this.proofs = proofs;
         this.carrierProposition = carrierProposition;
@@ -53,7 +54,7 @@ public class ShipmentOrderInfo {
     }
 
     public ShipmentOrderBoxData getShipmentOrderBoxData() {
-        ArrayList<String> bottleBoxUuids = new ArrayList<>(bottleBoxesToOpen.size());
+        List<String> bottleBoxUuids = new ArrayList<>(bottleBoxesToOpen.size());
         for(BottleBox bottleBox : bottleBoxesToOpen){
             bottleBoxUuids.add(bottleBox.getUuid());
         }
@@ -106,7 +107,7 @@ public class ShipmentOrderInfo {
         int batchSize = BytesUtils.getInt(bytes, offset);
         offset += 4;
 
-        ArrayList<BottleBox> bottleBoxes = new ArrayList<>(batchSize);
+        List<BottleBox> bottleBoxes = new ArrayList<>(batchSize);
 
         for (int i = 0; i < batchSize; ++i) {
             int boxSize = BytesUtils.getInt(bytes, offset);
@@ -122,7 +123,7 @@ public class ShipmentOrderInfo {
         batchSize = BytesUtils.getInt(bytes, offset);
         offset += 4;
 
-        ArrayList<Signature25519> proofs = new ArrayList<>(batchSize);
+        List<Signature25519> proofs = new ArrayList<>(batchSize);
 
         for (int i = 0; i < batchSize; ++i) {
             int proofSize = BytesUtils.getInt(bytes, offset);

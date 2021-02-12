@@ -105,7 +105,7 @@ public class SellBottleTransaction extends AbstractRegularTransaction {
         int batchSize = BytesUtils.getInt(bytes, offset);
         offset += 4;
 
-        ArrayList<byte[]> inputRegularBoxIds = new ArrayList<>();
+        List<byte[]> inputRegularBoxIds = new ArrayList<>();
         int idLength = NodeViewModifier$.MODULE$.ModifierIdSize();
         while(batchSize > 0) {
             inputRegularBoxIds.add(Arrays.copyOfRange(bytes, offset, offset + idLength));

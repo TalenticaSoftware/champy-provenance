@@ -1,6 +1,7 @@
 package com.talentica.champy.bottle.api.request;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class CreateShipmentOrderBoxRequest {
     public String shipmentId;
@@ -8,7 +9,7 @@ public class CreateShipmentOrderBoxRequest {
     public String receiver;
     public String carrier;
     public String shippingDate;
-    public ArrayList<String> bottleBoxIds;
+    public List<String> bottleBoxIds;
     public long shipmentValue;
     public String carrierProposition;
     public long fee;
@@ -33,7 +34,7 @@ public class CreateShipmentOrderBoxRequest {
         this.shippingDate = shippingDate;
     }
 
-    public void setBottleBoxIds(ArrayList<String> bottleBoxIds) {
+    public void setBottleBoxIds(List<String> bottleBoxIds) {
         this.bottleBoxIds = bottleBoxIds;
     }
 

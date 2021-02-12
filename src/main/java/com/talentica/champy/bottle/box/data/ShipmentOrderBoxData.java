@@ -15,6 +15,7 @@ import scorex.crypto.hash.Blake2b256;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import static com.talentica.champy.bottle.box.data.AppBoxesDataIdsEnum.ShipmentOrderBoxDataId;
 
@@ -26,10 +27,10 @@ public class ShipmentOrderBoxData extends AbstractNoncedBoxData<PublicKey25519Pr
     private final String receiver;      //Retailer - receiver public key
     private final String carrier;       //Carrier public key
     private final String shippingDate;    //Shipment date mm-dd-yyyy format
-    private final ArrayList<String> bottleBoxUuids;  //List of bottle Ids shipped within this shipment
+    private final List<String> bottleBoxUuids;  //List of bottle Ids shipped within this shipment
     private final long shipmentValue;           //Total shipment value
 
-    public ShipmentOrderBoxData(PublicKey25519Proposition proposition, String shipmentId, String manufacturer, String receiver, String carrier, String shippingDate, ArrayList<String> bottleBoxUuids, long shipmentValue) {
+    public ShipmentOrderBoxData(PublicKey25519Proposition proposition, String shipmentId, String manufacturer, String receiver, String carrier, String shippingDate, List<String> bottleBoxUuids, long shipmentValue) {
         super(proposition, 1);
         this.shipmentId = shipmentId;
         this.manufacturer = manufacturer;
@@ -123,7 +124,7 @@ public class ShipmentOrderBoxData extends AbstractNoncedBoxData<PublicKey25519Pr
         final int nBottles = Ints.fromByteArray(Arrays.copyOfRange(bytes, offset, offset+Ints.BYTES));
         offset += Ints.BYTES;
 
-        ArrayList<String> bottleBoxIds = new ArrayList<>(size);
+        List<String> bottleBoxIds = new ArrayList<>(size);
         for(int i=0; i<nBottles; ++i){
             size = Ints.fromByteArray(Arrays.copyOfRange(bytes, offset, offset+Ints.BYTES));
             offset += Ints.BYTES;
@@ -169,7 +170,7 @@ public class ShipmentOrderBoxData extends AbstractNoncedBoxData<PublicKey25519Pr
         return shippingDate;
     }
 
-    public ArrayList<String> getBottleBoxUuids() {
+    public List<String> getBottleBoxUuids() {
         return bottleBoxUuids;
     }
 
