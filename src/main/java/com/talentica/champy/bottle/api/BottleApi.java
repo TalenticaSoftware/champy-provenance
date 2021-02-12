@@ -65,7 +65,7 @@ public class BottleApi extends ApplicationApiGroup {
         routes.add(bindPostRequest("createBottle", this::createBottle, CreateBottleBoxRequest.class));
         routes.add(bindPostRequest("createShipmentOrder", this::createShipmentOrder, CreateShipmentOrderBoxRequest.class));
         routes.add(bindPostRequest("deliverShipmentOrder", this::deliverShipmentOrder, DeliverShipmentRequest.class));
-        routes.add(bindPostRequest("SellBottle", this::sellBottle, SellBottleRequest.class));
+        routes.add(bindPostRequest("sellBottle", this::sellBottle, SellBottleRequest.class));
         routes.add(bindPostRequest("getBottleStatus", this::getBottleStatus, GetBottleStatus.class));
         return routes;
     }
